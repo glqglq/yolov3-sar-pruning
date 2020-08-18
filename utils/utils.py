@@ -21,7 +21,7 @@ torch.set_printoptions(linewidth=320, precision=5, profile='long')
 np.set_printoptions(linewidth=320, formatter={'float_kind': '{:11.5g}'.format})  # format short g, %precision=5
 
 # Prevent OpenCV from multithreading (to use PyTorch DataLoader)
-cv2.setNumThreads(0)
+# cv2.setNumThreads(0)
 
 
 def floatn(x, n=3):  # format floats to n decimals
@@ -436,6 +436,8 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.5):
     """
     Removes detections with lower object confidence score than 'conf_thres'
     Non-Maximum Suppression to further filter detections.
+    Input:
+        (x,y,w,h,object_conf, class_conf)
     Returns detections with shape:
         (x1, y1, x2, y2, object_conf, class_conf, class)
     """
@@ -460,6 +462,7 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.5):
         # Multiply conf by class conf to get combined confidence
         class_conf, class_pred = pred[:, 5:].max(1)
         pred[:, 4] *= class_conf
+        # print(pred[:, 5:])
 
         # # Merge classes (optional)
         # class_pred[(class_pred.view(-1,1) == torch.LongTensor([2, 3, 5, 6, 7]).view(1,-1)).any(1)] = 2
@@ -480,7 +483,12 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.5):
         class_pred = class_pred[i].unsqueeze(1).float()
 
         # Box (center x, center y, width, height) to (x1, y1, x2, y2)
+        # print(pred[:, :4])
+        # print(pred[:, :4].shape)
         pred[:, :4] = xywh2xyxy(pred[:, :4])
+        # print(pred[:,:4])
+        # exit(0)
+
         # pred[:, 4] *= class_conf  # improves mAP from 0.549 to 0.551
 
         # Detections ordered as (x1y1x2y2, obj_conf, class_conf, class_pred)
@@ -731,12 +739,12 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line thickness
     color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
-    cv2.rectangle(img, c1, c2, color, thickness=tl)
+    cv2.rectangle(img, c1, c2, color)
     if label:
         tf = max(tl - 1, 1)  # font thickness
         t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
-        cv2.rectangle(img, c1, c2, color, -1)  # filled
+        cv2.rectangle(img, c1, c2, color)  # filled
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 

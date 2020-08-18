@@ -228,10 +228,12 @@ class Darknet(nn.Module):
         self.seen = np.array([0], dtype=np.int64)  # (int64) number of images seen during training
 
     def forward(self, x, var=None):
+        # print(x.cpu().shape, x.cpu())
+        # exit(0)
         img_size = x.shape[-2:]
         layer_outputs = []
         output = []
-
+        # print(x.shape)
         for i, (mdef, module) in enumerate(zip(self.module_defs, self.module_list)):
             mtype = mdef['type']
             if mtype in ['convolutional', 'upsample', 'maxpool']:
@@ -252,9 +254,19 @@ class Darknet(nn.Module):
             elif mtype == 'shortcut':
                 x = x + layer_outputs[int(mdef['from'])]
             elif mtype == 'yolo':
-                x = module(x, img_size)
-                output.append(x)
+                x = module(x, img_size)  # [bs, 18, 13, 13]-> [[bs, 507, 6], [1, 3, 13, 13, 6]]
+                # print(x[0].shape, x[0])
+                # print(x[1].shape, x[1])
+                # exit(0)
+                # print(x[1].permute(0, 1, 4, 2, 3).contiguous().view(1, 18, 13, 13).shape, x[1].permute(0, 1, 4, 2, 3).contiguous().view(1, 18, 13, 13))
+                # exit(0)
+                output.append(x)  # [[[bs, 507, 6]  [bs, 3, 13, 13, 6]], [[bs, 2028, 6]  [bs, 3, 26, 26, 6]], [[bs, 8112, 6]  [bs, 3, 52, 52, 6]]]
             layer_outputs.append(x if i in self.routs else [])
+            # if(isinstance(x, torch.Tensor)):
+            #     print(mtype, x.shape)
+            # else:
+            #     print(mtype, len(x), x[0].shape, x[1].shape)
+        # exit(0)
 
         if self.training:
             return output
@@ -263,8 +275,13 @@ class Darknet(nn.Module):
             nc = self.module_list[self.yolo_layers[0]].nc  # number of classes
             return output[5:5 + nc].t(), output[:4].t()  # ONNX scores, boxes
         else:
-            io, p = list(zip(*output))  # inference output, training output
-            return torch.cat(io, 1), p
+            io, p = list(zip(*output))  # inference output  [[bs, 507, 6], [bs, 2028, 6], [bs, 8112, 6]]      [[bs, 3, 13, 13, 6]  [bs, 3, 26, 26, 6]  [bs, 3, 52, 52, 6]]
+            # print(io[0].shape, io[0])
+            # print(torch.cat(io, 1).shape, torch.cat(io, 1))
+            # exit(0)
+            # print(torch.cat(io, 1))
+            # exit(0)
+            return torch.cat(io, 1), p  # [bs size(1), 507 + 2028 + 8112, 6]            [[bs, 3, 13, 13, 6]  [bs, 3, 26, 26, 6]  [bs, 3, 52, 52, 6]]
 
     def fuse(self):
         # Fuse Conv2d + BatchNorm2d layers throughout model

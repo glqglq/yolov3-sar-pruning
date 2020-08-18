@@ -13,17 +13,19 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/coco.data', help='*.data file path')
+    parser.add_argument('--data_path', type=str, default='data/coco.data', help='*.data file path')
     parser.add_argument('--weights', type=str, default='weights/last.pt', help='sparse model weights')
     parser.add_argument('--shortcuts', type=int, default=8, help='how many shortcut layers will be pruned,\
         pruning one shortcut will also prune two CBL,yolov3 has 23 shortcuts')
     parser.add_argument('--global_percent', type=float, default=0.6, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
+    parser.add_argument('--nc', type=int, default=1, help='class number')
     opt = parser.parse_args()
     print(opt)
 
     img_size = opt.img_size
+    data_path = opt.data_path
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
 
@@ -33,8 +35,14 @@ if __name__ == '__main__':
         _ = load_darknet_weights(model, opt.weights)
     print('\nloaded weights from ',opt.weights)
 
-
-    eval_model = lambda model:test(model=model, cfg=opt.cfg, data=opt.data, batch_size=16, img_size=img_size)
+    from utils.sarship_datasets import SarShipDataset
+    test_dataset = SarShipDataset(data_dir=data_path, is_train=False, img_size=img_size, batch_size=20, cache=True)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset,
+                                                  batch_size=20,
+                                                  num_workers=min([os.cpu_count(), 20, 16]),
+                                                  pin_memory=True,
+                                                  collate_fn=test_dataset.collate_fn)
+    eval_model = lambda model:test(model=model, cfg=opt.cfg, output_dir=os.path.join(data_path, 'Valid/PredictOutPut/'), nc=opt.nc, dataloader=test_dataloader, batch_size=20, img_size=img_size)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
 
     print("\nlet's test the original model first:")
@@ -323,7 +331,7 @@ if __name__ == '__main__':
     pruned_cfg_file = write_cfg(pruned_cfg_name, [model.hyperparams.copy()] + compact_module_defs)
     print(f'Config file has been saved: {pruned_cfg_file}')
 
-    compact_model_name = opt.weights.replace('/', f'/prune_{opt.global_percent}_keep_{opt.layer_keep}_{opt.shortcuts}_shortcut_')
+    compact_model_name = opt.weights.replace('/before_prune_sparse/', f'/prune_{opt.global_percent}_keep_{opt.layer_keep}_{opt.shortcuts}_shortcut_')
     if compact_model_name.endswith('.pt'):
         compact_model_name = compact_model_name.replace('.pt', '.weights')
     save_weights(compact_model2, path=compact_model_name)

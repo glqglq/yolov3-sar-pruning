@@ -275,9 +275,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.image_weights = image_weights
         self.rect = False if image_weights else rect
 
-        # Define labels
-        self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
-                            for x in self.img_files]
+        # Define label filenames
+        self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt') for x in self.img_files]
 
         # Rectangular Training  https://github.com/ultralytics/yolov3/issues/232
         if self.rect:
@@ -461,10 +460,14 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         if nL:
             # convert xyxy to xywh
             labels[:, 1:5] = xyxy2xywh(labels[:, 1:5])
+            # print(labels)
+            # exit()
 
             # Normalize coordinates 0 - 1
             labels[:, [2, 4]] /= img.shape[0]  # height
             labels[:, [1, 3]] /= img.shape[1]  # width
+        # print(labels)
+        # exit()
 
         if self.augment:
             # random left-right flip
@@ -490,6 +493,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         img = np.ascontiguousarray(img, dtype=np.float32)  # uint8 to float32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
 
+        # print(torch.from_numpy(img).shape)
+        # print(labels_out)
+        # print(img_path)
+        # print((h, w))
+        # exit(0)
         return torch.from_numpy(img), labels_out, img_path, (h, w)
 
     @staticmethod
@@ -553,6 +561,7 @@ def load_mosaic(self, index):
     for i, index in enumerate(indices):
         # Load image
         img = load_image(self, index)
+
         h, w, _ = img.shape
 
         # place img in img4
@@ -588,6 +597,8 @@ def load_mosaic(self, index):
                 labels[:, 2] = h * (x[:, 2] - x[:, 4] / 2) + padh
                 labels[:, 3] = w * (x[:, 1] + x[:, 3] / 2) + padw
                 labels[:, 4] = h * (x[:, 2] + x[:, 4] / 2) + padh
+            # print(labels, label_path)
+            # exit()
             # else:
                 # labels = np.zeros((0,5), dtype=np.float32)
 
@@ -605,6 +616,9 @@ def load_mosaic(self, index):
     a = s // 2
     img4 = img4[a:a + s, a:a + s]
     labels4[:, 1:] -= a
+
+    # print(labels4)
+    # exit()
 
     return img4, labels4
 
