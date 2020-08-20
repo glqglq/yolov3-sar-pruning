@@ -48,7 +48,7 @@ class Metric(SarShipDataset):
                     y2 = float(y2) * self.img_size
                     pred_bboxes.append([x1, y1, x2, y2, conf, 1.0, 0.0])
             pred_bboxes = torch.Tensor(pred_bboxes)
-            clip_coords(pred_bboxes, (self.img_size, self.img_size))
+            # clip_coords(pred_bboxes, (self.img_size, self.img_size))
 
             # print(filename, pred_bboxes)
             # print(tbox)
@@ -86,5 +86,5 @@ class Metric(SarShipDataset):
 
 
 if __name__ == '__main__':
-    m = Metric('data/SARShip_pre_hepeng/', 'data/pred/')
+    m = Metric('data/SARShip_pre_hepeng/', 'data/pred_416/')
     print(m.mp, m.mr, m.map, m.mf1, m.nt)

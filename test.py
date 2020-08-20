@@ -31,7 +31,8 @@ def test(cfg, nc = 1, output_dir = '',
          conf_thres=0.001,
          nms_thres=0.5,
          save_json=False,
-         model=None):
+         model=None,
+         only_test = False):
 
 
     #########
@@ -58,9 +59,10 @@ def test(cfg, nc = 1, output_dir = '',
         verbose = False
     model.eval()
 
-    # flops, params = profile(model, inputs=(torch.randn(1, 3, 416, 416).to(device), ))
-    # print('flops is %d, param count is %d' %(flops, params))
-    # exit(0)
+    if only_test:
+        flops, params = profile(model, inputs=(torch.randn(1, 3, 416, 416).to(device), ))
+        print('flops is %d, param count is %d' %(flops, params))
+        # exit(0)
 
 
     ##########
@@ -261,4 +263,5 @@ if __name__ == '__main__':
              opt.iou_thres,
              opt.conf_thres,
              opt.nms_thres,
-             opt.save_json)
+             opt.save_json,
+             only_test = True)

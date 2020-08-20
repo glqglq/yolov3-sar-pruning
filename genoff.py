@@ -42,8 +42,12 @@ def genoff(cfg_path, weights_path, parallel, offline_model_path, batch_size, cor
     in_h = 416
     in_w = 416
 
-    from models_for_mlu_inference import yolov3
-    net = yolov3(cfg=cfg_path, pretrained=False, img_size=in_h, conf_thres=0.001, nms_thres=0.5)
+    # from models_for_mlu_me import yolov3
+    # from models_for_mlu_official import yolov3
+    # net = yolov3(cfg=cfg_path, pretrained=False, img_size=in_h, conf_thres=0.001, nms_thres=0.5)
+    import torchvision.models as torchvision_models
+    # net = torchvision_models.object_detection.Darknet(cfg_path, in_h, conf_thres=0.001, nms_thres=0.5).eval()
+    net = torchvision_models.object_detection.yolov3(False, in_h, conf_thres=0.001, nms_thres=0.5).eval()
     net.load_weights(weights_path)
 
     # Generate offline model

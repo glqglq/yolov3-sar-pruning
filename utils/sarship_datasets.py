@@ -190,4 +190,4 @@ class SarShipDataset(Dataset):
         return y
 
 if __name__ == '__main__':
-    SarShipDataset('/home/luckygong/luckygong/yolov3-channel-and-layer-pruning/data/SARShip_pre_hepeng/', is_train = True, img_size=416, batch_size=16, cache = True)
+    data = SarShipDataset('/home/luckygong/luckygong/yolov3-channel-and-layer-pruning/data/SARShip_pre_hepeng/', is_train = False, img_size=416, batch_size=16, cache = True)

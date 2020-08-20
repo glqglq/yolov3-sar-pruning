@@ -262,6 +262,7 @@ class Darknet(nn.Module):
                 # exit(0)
                 output.append(x)  # [[[bs, 507, 6]  [bs, 3, 13, 13, 6]], [[bs, 2028, 6]  [bs, 3, 26, 26, 6]], [[bs, 8112, 6]  [bs, 3, 52, 52, 6]]]
             layer_outputs.append(x if i in self.routs else [])
+            # print(module)
             # if(isinstance(x, torch.Tensor)):
             #     print(mtype, x.shape)
             # else:

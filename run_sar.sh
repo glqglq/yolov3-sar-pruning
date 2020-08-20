@@ -57,7 +57,7 @@ mv weights/*.pt weights/after_finetune_sar/
 sudo python3 -c "from models import *; convert('cfg/prune_${GLOBAL_PERCENT}_keep_${LAYER_KEEP}_${SHORTCUT}_shortcut_yolov3-spp-hand.cfg', 'weights/after_finetune_sar/last.pt')"
 mv converted.weights weights/after_finetune_sar/
 
-# test compressed model on gpu
+# test compressed model on gpu & cpu
 python3 test.py \
   --cfg cfg/prune_${GLOBAL_PERCENT}_keep_${LAYER_KEEP}_${SHORTCUT}_shortcut_yolov3-spp-hand.cfg \
   --data_path data/SARShip_pre_hepeng/ \
@@ -65,6 +65,16 @@ python3 test.py \
   --batch-size 1 \
   --save-json \
   --device 0
+
+# test origin model on gpu & cpu
+python3 test.py \
+  --cfg cfg/yolov3-spp-hand.cfg \
+  --data_path data/SARShip_pre_hepeng/ \
+  --weights weights/before_prune_sparse_sar/converted.weights \
+  --batch-size 1 \
+  --save-json \
+  --device 0
+
 # to mlu100
 python genoff.py \
   -cfg_path prune_${GLOBAL_PERCENT}_keep_${LAYER_KEEP}_${SHORTCUT}_shortcut_yolov3-spp-hand.cfg \
@@ -81,14 +91,6 @@ python genoff.py \
   -outputdir pred \
   -dump 1 \
   -simple_compile 1
-# test origin model on gpu
-python3 test.py \
-  --cfg cfg/yolov3-spp-hand.cfg \
-  --data_path data/SARShip_pre_hepeng/ \
-  --weights weights/before_prune_sparse_sar/converted.weights \
-  --batch-size 1 \
-  --save-json \
-  --device 0
 
 
 
